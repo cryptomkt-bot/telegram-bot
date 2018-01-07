@@ -1,11 +1,11 @@
 import logging
 import os
-import telegram
 import threading
 
 from cryptomkt import Cryptomkt
 from datetime import datetime
-from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
+from telegram.ext import CallbackQueryHandler, CommandHandler, Filters, MessageHandler, Updater
 
 from models import session, Alert, Chat, Market
 
@@ -63,7 +63,7 @@ def price(bot, update):
         'time': time.strftime('%d/%m/%Y - %H:%M:%S (UTC)'),
     }
     text = "*${value} ({code})*\n_{time}_".format(**price)
-    update.message.reply_text(text, parse_mode=telegram.ParseMode.MARKDOWN)
+    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
 def add_alert(bot, update, price=None):
@@ -87,7 +87,7 @@ def add_alert(bot, update, price=None):
     session.commit()
     sign = 'menor' if trigger_on_lower else 'mayor'
     text = "Perfecto, te enviaré una alerta cuando el precio sea _{}_ a *${}*.".format(sign, price)
-    update.message.reply_text(text, parse_mode=telegram.ParseMode.MARKDOWN)
+    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
 def text_handler(bot, update):
@@ -98,10 +98,51 @@ def text_handler(bot, update):
     return add_alert(bot, update, words[0])
 
 
+def alert_list(bot, update, edit_message=False):
+    chat_id = update.message.chat.id
+    alerts = session.query(Alert).filter_by(chat_id=chat_id).order_by(Alert.price)
+    if alerts.count() == 0:
+        text = "No tiene ninguna alerta configurada.\n¿Desea agregar una /alerta?"
+        return update.message.reply_text(text)
+    keyboard = []
+    for alert in alerts:
+        button = InlineKeyboardButton(str(alert), callback_data='alert {}'.format(alert.id))
+        keyboard.append([button])
+    text = "*Listado de alertas*"
+    text_setting = {
+        'parse_mode': ParseMode.MARKDOWN,
+        'reply_markup': InlineKeyboardMarkup(keyboard),
+    }
+    if edit_message:
+        update.edit_message_text(text, **text_setting)
+    else:
+        update.message.reply_text(text, **text_setting)
+
+
+def alert_detail(query, alert_id):
+    alert = session.query(Alert).get(alert_id)
+    keyboard = [[InlineKeyboardButton("Volver al listado", callback_data='alerts'),
+                 InlineKeyboardButton("Quitar alerta", callback_data='remove {}'format(alert.id))]]
+    query.edit_message_text(str(alert), reply_markup=InlineKeyboardMarkup(keyboard))
+
+
+def button(bot, update):
+    query = update.callback_query
+    data_list = query.data.split()
+    if data_list[0] == 'alert':
+        alert_id = data_list[1]
+        alert_detail(query, alert_id)
+    elif data_list[0] == 'alerts':
+        alert_list(bot, query, edit_message=True)
+    query.answer()
+
+
 update_price()
 dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(CommandHandler("precio", price))
+dispatcher.add_handler(CommandHandler("alertas", alert_list))
 dispatcher.add_handler(CommandHandler("alerta", add_alert))
+dispatcher.add_handler(CallbackQueryHandler(button))
 dispatcher.add_handler(MessageHandler(Filters.text, text_handler))
 updater.start_webhook(listen='0.0.0.0',
                       port=8443,

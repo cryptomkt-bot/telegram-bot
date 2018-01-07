@@ -38,6 +38,7 @@ class Market(Base):
         query = session.query(Alert).join(Chat).join(Market).filter(Market.id == self.id).filter(or_(*filters))
         return query.all()
 
+
 class Alert(Base):
     """A user price alert
 
@@ -49,6 +50,10 @@ class Alert(Base):
     chat = relationship('Chat', backref='alerts')
     price = Column(Integer)
     trigger_on_lower = Column(Boolean, nullable=False)
+
+    def __str__(self):
+        sign = 'menor' if self.trigger_on_lower else 'mayor'
+        return "Precio {} a ${}".format(sign, self.price)
 
 
 if __name__ == '__main__':
