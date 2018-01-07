@@ -1,0 +1,5 @@
+__pycache__/
+venv/
+bot.db
+cert.pem
+private.key
