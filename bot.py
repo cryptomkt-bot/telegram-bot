@@ -1,8 +1,10 @@
 import logging
 import os
+import telegram
 import threading
 
 from cryptomkt import Cryptomkt
+from datetime import datetime
 from telegram.ext import CommandHandler, Updater
 
 from models import session, Chat, Market
@@ -41,8 +43,21 @@ def start(bot, update):
     update.message.reply_text("Hola!, ¿en qué puedo ayudarte?")
 
 
+def price(bot, update):
+    market = session.query(Market).filter_by(code=market_code).first()
+    time = datetime.strptime(market.timestamp, '%Y-%m-%dT%H:%M:%S.%f')
+    price = {
+        'value': market.price,
+        'code': market.code,
+        'time': time.strftime('%d/%m/%Y - %H:%M:%S (UTC)'),
+    }
+    text = "*${value} ({code})*\n_{time}_".format(**price)
+    update.message.reply_text(text, parse_mode=telegram.ParseMode.MARKDOWN)
+
+
 update_price()
 dispatcher.add_handler(CommandHandler("start", start))
+dispatcher.add_handler(CommandHandler("precio", price))
 updater.start_webhook(listen='0.0.0.0',
                       port=8443,
                       url_path=BOT_TOKEN,
