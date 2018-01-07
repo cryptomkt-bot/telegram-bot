@@ -29,6 +29,14 @@ class Market(Base):
     price = Column(Integer)
     timestamp = Column(String)
 
+    def valid_alerts(self):
+        """Return those alerts that satisfy its conditions."""
+        filters = [
+            and_(Market.price < Alert.price, Alert.trigger_on_lower == True),
+            and_(Market.price > Alert.price, Alert.trigger_on_lower == False),
+        ]
+        query = session.query(Alert).join(Chat).join(Market).filter(Market.id == self.id).filter(or_(*filters))
+        return query.all()
 
 class Alert(Base):
     """A user price alert

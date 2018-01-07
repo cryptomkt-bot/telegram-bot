@@ -29,7 +29,18 @@ def update_price():
     market.timestamp = ticker['timestamp']
     session.add(market)
     session.commit()
+    if price_changed:
+        alert(market)
     threading.Timer(60, update_price).start()
+
+
+def alert(market):
+    for alert in market.valid_alerts():
+        sign = 'menor' if alert.trigger_on_lower else 'mayor'
+        text = "*ALERTA!*\nEl precio es {} a ${}.\n*Precio actual = ${}*".format(sign, alert.price, market.price)
+        dispatcher.bot.send_message(chat_id=alert.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
+        session.delete(alert)
+    session.commit()
 
 
 def start(bot, update):
