@@ -1,5 +1,6 @@
 import logging
 import os
+import threading
 
 from cryptomkt import Cryptomkt
 from telegram.ext import CommandHandler, Updater
@@ -17,6 +18,18 @@ updater = Updater(token=BOT_TOKEN)
 dispatcher = updater.dispatcher
 
 
+def update_price():
+    ticker = cryptomkt.get_ticker()
+    market = session.query(Market).filter_by(code=market_code).first()
+    price_changed = market.price != ticker['ask']
+    if price_changed:
+        market.price = ticker['ask']
+    market.timestamp = ticker['timestamp']
+    session.add(market)
+    session.commit()
+    threading.Timer(60, update_price).start()
+
+
 def start(bot, update):
     market = session.query(Market).filter_by(code=market_code).first()
     chat_id = update.message.chat.id
@@ -28,6 +41,7 @@ def start(bot, update):
     update.message.reply_text("Hola!, ¿en qué puedo ayudarte?")
 
 
+update_price()
 dispatcher.add_handler(CommandHandler("start", start))
 updater.start_webhook(listen='0.0.0.0',
                       port=8443,
