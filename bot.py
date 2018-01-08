@@ -58,7 +58,19 @@ def start(bot, update):
         session.commit()
         text = "Hola! Por favor, seleccione un mercado:"
         market_list(bot, update, text)
-    # TODO: else, show help
+    else:
+        help_me(bot, update)
+
+
+def help_me(bot, update):
+    text = '¿En qué puedo ayudarte?\n\n'
+    text += '/precio - Ver precio actual\n\n'
+    text += '/alerta - Añadir alerta de precio\n\n'
+    text += '/alertas - Mostrar alertas activas\n\n'
+    text += '/mercado - Cambiar mercado\n\n'
+    text += '/ayuda - Mostrar este menú\n\n'
+    text += '_Para quitar una alerta debe seleccionarla previamente en el listado._'
+    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
 def price(bot, update):
@@ -184,6 +196,7 @@ def button(bot, update):
 
 update_price()
 dispatcher.add_handler(CommandHandler("start", start))
+dispatcher.add_handler(CommandHandler("ayuda", help_me))
 dispatcher.add_handler(CommandHandler("precio", price))
 dispatcher.add_handler(CommandHandler("alertas", alert_list))
 dispatcher.add_handler(CommandHandler("alerta", add_alert))
