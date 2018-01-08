@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import create_engine, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import relationship, sessionmaker
@@ -29,6 +30,13 @@ class Market(Base):
     price = Column(Integer)
     timestamp = Column(String)
 
+    def time(self):
+        time = datetime.strptime(self.timestamp, '%Y-%m-%dT%H:%M:%S.%f')
+        return time.strftime('%d/%m/%Y - %H:%M:%S (UTC)')
+
+    def formatted_price(self):
+        return "${value} ({code})".format(value=self.price, code=self.code[3:])
+
     def valid_alerts(self):
         """Return those alerts that satisfy its conditions."""
         filters = [
@@ -40,12 +48,7 @@ class Market(Base):
 
 
 class Alert(Base):
-    """A user price alert
-
-    If the coin price at the moment the alarm is set is lower than alert.price,
-    the alarm will trigger when the coin price becomes higher than alert.price.
-    Otherwise, it will trigger when the coin price becomes lower.
-    """
+    """A user price alert"""
     chat_id = Column(ForeignKey('chat.id'), nullable=False)
     chat = relationship('Chat', backref='alerts')
     price = Column(Integer)

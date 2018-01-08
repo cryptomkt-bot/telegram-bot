@@ -9,12 +9,6 @@ class Cryptomkt():
     TICKER_ENDPOINT = API_URL + '/v1/ticker'
     MARKET_ENDPOINT = API_URL + '/v1/market'
 
-    def __init__(self, market_code=None):
-        self.market_code = market_code
-
-    def set_market(self, market_code):
-        self.market_code = market_code
-
     def _get_response_data(self, response):
         response = response.json()
         if response['status'] == 'error':
@@ -27,5 +21,6 @@ class Cryptomkt():
         return self._get_response_data(response)
 
     def get_tickers(self):
+        """Get CryptoMKT tickers."""
         response = requests.get(self.TICKER_ENDPOINT)
         return self._get_response_data(response)
