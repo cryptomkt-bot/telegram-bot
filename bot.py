@@ -90,6 +90,11 @@ def add_alert(bot, update, price=None):
     update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
+def remove_alert(bot, update, alert_id):
+    session.query(Alert).filter_by(id=alert_id).delete()
+    alert_list(bot, update, edit_message=True)
+
+
 def text_handler(bot, update):
     words = update.message.text.split()
     if len(words) != 1:
@@ -99,11 +104,12 @@ def text_handler(bot, update):
 
 
 def alert_list(bot, update, edit_message=False):
+    send = update.edit_message_text if edit_message else update.message.reply_text
     chat_id = update.message.chat.id
     alerts = session.query(Alert).filter_by(chat_id=chat_id).order_by(Alert.price)
     if alerts.count() == 0:
         text = "No tiene ninguna alerta configurada.\n¿Desea agregar una /alerta?"
-        return update.message.reply_text(text)
+        return send(text)
     keyboard = []
     for alert in alerts:
         button = InlineKeyboardButton(str(alert), callback_data='alert {}'.format(alert.id))
@@ -113,16 +119,13 @@ def alert_list(bot, update, edit_message=False):
         'parse_mode': ParseMode.MARKDOWN,
         'reply_markup': InlineKeyboardMarkup(keyboard),
     }
-    if edit_message:
-        update.edit_message_text(text, **text_setting)
-    else:
-        update.message.reply_text(text, **text_setting)
+    send(text, **text_setting)
 
 
 def alert_detail(query, alert_id):
     alert = session.query(Alert).get(alert_id)
     keyboard = [[InlineKeyboardButton("Volver al listado", callback_data='alerts'),
-                 InlineKeyboardButton("Quitar alerta", callback_data='remove {}'format(alert.id))]]
+                 InlineKeyboardButton("Quitar alerta", callback_data='remove {}'.format(alert.id))]]
     query.edit_message_text(str(alert), reply_markup=InlineKeyboardMarkup(keyboard))
 
 
@@ -132,9 +135,14 @@ def button(bot, update):
     if data_list[0] == 'alert':
         alert_id = data_list[1]
         alert_detail(query, alert_id)
+        query.answer()
     elif data_list[0] == 'alerts':
         alert_list(bot, query, edit_message=True)
-    query.answer()
+        query.answer()
+    elif data_list[0] == 'remove':
+        alert_id = data_list[1]
+        remove_alert(bot, query, alert_id)
+        query.answer("Alerta eliminada")
 
 
 update_price()
