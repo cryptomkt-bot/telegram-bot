@@ -26,11 +26,6 @@ class Cryptomkt():
         response = requests.get(self.MARKET_ENDPOINT)
         return self._get_response_data(response)
 
-    def get_ticker(self, market_code=None):
-        """Get market ticker."""
-        market_code = self.market_code or market_code
-        if market_code is None:
-            raise ValueError("You must specify a market.")
-        payload = {'market': market_code}
-        response = requests.get(self.TICKER_ENDPOINT, params=payload)
-        return self._get_response_data(response)[0]
+    def get_tickers(self):
+        response = requests.get(self.TICKER_ENDPOINT)
+        return self._get_response_data(response)

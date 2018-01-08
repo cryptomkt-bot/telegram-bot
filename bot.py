@@ -14,52 +14,63 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 # Enable logger
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-market_code = 'ETHARS'  # TODO: User configured market
-cryptomkt = Cryptomkt(market_code=market_code)
+cryptomkt = Cryptomkt()
 updater = Updater(token=BOT_TOKEN)
 dispatcher = updater.dispatcher
 
 
 def update_price():
-    ticker = cryptomkt.get_ticker()
-    market = session.query(Market).filter_by(code=market_code).first()
-    price_changed = market.price != ticker['ask']
-    if price_changed:
-        market.price = ticker['ask']
-    market.timestamp = ticker['timestamp']
-    session.add(market)
+    markets = session.query(Market).all()
+    tickers = cryptomkt.get_tickers()
+    changed_markets = []
+    for market in markets:
+        for t in tickers:
+            if t['market'] == market.code:
+                ticker = t
+                break
+        price_changed = market.price != ticker['ask']
+        if price_changed:
+            changed_markets.append(market)
+            market.price = ticker['ask']
+        market.timestamp = ticker['timestamp']
+        session.add(market)
     session.commit()
-    if price_changed:
-        alert(market)
+    alert(changed_markets)
     threading.Timer(60, update_price).start()
 
 
-def alert(market):
-    for alert in market.valid_alerts():
-        sign = 'menor' if alert.trigger_on_lower else 'mayor'
-        text = "*ALERTA!*\nEl precio es {} a ${}.\n*Precio actual = ${}*".format(sign, alert.price, market.price)
-        dispatcher.bot.send_message(chat_id=alert.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
-        session.delete(alert)
+def alert(markets):
+    for market in markets:
+        for alert in market.valid_alerts():
+            sign = 'menor' if alert.trigger_on_lower else 'mayor'
+            text = "*ALERTA!*\nEl precio es {} a ${}.\n*Precio actual = ${}*".format(sign, alert.price, market.price)
+            dispatcher.bot.send_message(chat_id=alert.chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
+            session.delete(alert)
     session.commit()
 
 
 def start(bot, update):
-    market = session.query(Market).filter_by(code=market_code).first()
     chat_id = update.message.chat.id
     chat = session.query(Chat).get(chat_id)
     if chat is None:
-        chat = Chat(id=chat_id, market=market)
+        chat = Chat(id=chat_id)
         session.add(chat)
         session.commit()
-    update.message.reply_text("Hola!, ¿en qué puedo ayudarte?")
+        text = "Hola! Por favor, seleccione un mercado:"
+        market_list(bot, update, text)
+    # TODO: else, show help
 
 
 def price(bot, update):
-    market = session.query(Market).filter_by(code=market_code).first()
+    chat_id = update.message.chat.id
+    chat = session.query(Chat).get(chat_id)
+    if chat.market is None:
+        return market_list(bot, update, "Por favor, seleccione un mercado y vuelva a intentarlo:")
+    market = session.query(Market).filter_by(code=chat.market.code).first()
     time = datetime.strptime(market.timestamp, '%Y-%m-%dT%H:%M:%S.%f')
     price = {
         'value': market.price,
-        'code': market.code,
+        'code': market.code[3:],
         'time': time.strftime('%d/%m/%Y - %H:%M:%S (UTC)'),
     }
     text = "*${value} ({code})*\n_{time}_".format(**price)
@@ -67,6 +78,10 @@ def price(bot, update):
 
 
 def add_alert(bot, update, price=None):
+    chat_id = update.message.chat.id
+    chat = session.query(Chat).get(chat_id)
+    if chat.market is None:
+        return market_list(bot, update, "Por favor, seleccione un mercado y vuelva a intentarlo:")
     if price is None:
         return update.message.reply_text("Ingrese el precio:")
     try:
@@ -75,10 +90,9 @@ def add_alert(bot, update, price=None):
         return update.message.reply_text("El precio debe ser un número entero.")
     if price <= 0:
         return update.message.reply_text("El precio debe ser un número mayor a 0.")
-    market = session.query(Market).filter_by(code=market_code).first()
-    trigger_on_lower = price <= market.price
+    trigger_on_lower = price <= chat.market.price
     alert_data = {
-        'chat_id': update.message.chat.id,
+        'chat_id': chat.id,
         'price': price,
         'trigger_on_lower': trigger_on_lower
     }
@@ -129,6 +143,25 @@ def alert_detail(query, alert_id):
     query.edit_message_text(str(alert), reply_markup=InlineKeyboardMarkup(keyboard))
 
 
+def market_list(bot, update, text=None):
+    if text is None:
+        text = "Seleccione un mercado:"
+    markets = session.query(Market).all()
+    keyboard = []
+    for market in markets:
+        keyboard.append([InlineKeyboardButton(market.code[3:], callback_data='market {}'.format(market.id))])
+    update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+
+
+def change_market(update, market_id):
+    chat_id = update.message.chat.id
+    chat = session.query(Chat).get(chat_id)
+    if chat.market_id != market_id:
+        chat.market_id = market_id
+        session.commit()
+        session.query(Alert).filter_by(chat_id=chat.id).delete()
+
+
 def button(bot, update):
     query = update.callback_query
     data_list = query.data.split()
@@ -143,6 +176,10 @@ def button(bot, update):
         alert_id = data_list[1]
         remove_alert(bot, query, alert_id)
         query.answer("Alerta eliminada")
+    elif data_list[0] == 'market':
+        market_id = int(data_list[1])
+        change_market(query, market_id)
+        query.answer("Mercado establecido")
 
 
 update_price()
@@ -150,6 +187,7 @@ dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(CommandHandler("precio", price))
 dispatcher.add_handler(CommandHandler("alertas", alert_list))
 dispatcher.add_handler(CommandHandler("alerta", add_alert))
+dispatcher.add_handler(CommandHandler("mercado", market_list))
 dispatcher.add_handler(CallbackQueryHandler(button))
 dispatcher.add_handler(MessageHandler(Filters.text, text_handler))
 updater.start_webhook(listen='0.0.0.0',

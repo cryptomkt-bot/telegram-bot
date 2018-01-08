@@ -20,7 +20,7 @@ Base = declarative_base(cls=Base)
 
 
 class Chat(Base):
-    market_id = Column(ForeignKey('market.id'), nullable=False)
+    market_id = Column(ForeignKey('market.id'))
     market = relationship('Market', backref='chats')
 
 
