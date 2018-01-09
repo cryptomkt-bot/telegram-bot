@@ -1,6 +1,8 @@
 from models import session, Alert, Chat, Market
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 
+MAX_ALERT_NUMBER = 5
+
 
 def start(bot, update):
     chat_id = update.message.chat.id
@@ -66,6 +68,9 @@ def price(bot, update):
 
 def add_alert(bot, update, price=None):
     chat = get_chat(update)
+    if len(chat.alerts) == MAX_ALERT_NUMBER:
+        text = "Lo siento, sólo puedes agregar un máximo de {} /alertas.".format(MAX_ALERT_NUMBER)
+        return update.message.reply_text(text)
     market = get_market(bot, update, chat)
     if market is None:
         return
