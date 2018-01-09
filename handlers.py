@@ -71,7 +71,7 @@ def add_alert(bot, update, price=None):
     market = get_market(bot, update, chat)
     if market is None:
         return
-    if len(chat.alerts) == MAX_ALERT_NUMBER:
+    if chat.alert_count() == MAX_ALERT_NUMBER:
         text = "Lo siento, sólo puedes agregar un máximo de {} /alertas.".format(MAX_ALERT_NUMBER)
         return update.message.reply_text(text)
     if price is None:

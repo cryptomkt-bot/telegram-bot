@@ -27,6 +27,9 @@ class Chat(Base):
     def get_alert(self, price):
         return session.query(Alert).filter_by(chat_id=self.id, price=price).first()
 
+    def alert_count(self):
+        return session.query(Alert).filter_by(chat_id=self.id).count()
+
 
 class Market(Base):
     code = Column(String, nullable=False, unique=True)
