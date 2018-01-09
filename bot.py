@@ -11,7 +11,7 @@ from models import session, Market
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
 # Enable logger
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
