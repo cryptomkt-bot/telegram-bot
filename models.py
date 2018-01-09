@@ -24,6 +24,9 @@ class Chat(Base):
     market_id = Column(ForeignKey('market.id'))
     market = relationship('Market', backref='chats')
 
+    def get_alert(self, price):
+        return session.query(Alert).filter_by(chat_id=self.id, price=price).first()
+
 
 class Market(Base):
     code = Column(String, nullable=False, unique=True)

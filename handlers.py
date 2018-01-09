@@ -85,16 +85,18 @@ def add_alert(bot, update, price=None):
         return update.message.reply_text("El precio debe ser un número entero.")
     if price <= 0:
         return update.message.reply_text("El precio debe ser un número mayor a 0.")
-    trigger_on_lower = price <= chat.market.price
-    alert_data = {
-        'chat_id': chat.id,
-        'price': price,
-        'trigger_on_lower': trigger_on_lower
-    }
-    alert = Alert(**alert_data)
-    session.add(alert)
-    session.commit()
-    sign = 'menor' if trigger_on_lower else 'mayor'
+    alert = chat.get_alert(price)
+    if alert is None:  # Create alert only if it doesn't exist
+        trigger_on_lower = price <= chat.market.price
+        alert_data = {
+            'chat_id': chat.id,
+            'price': price,
+            'trigger_on_lower': trigger_on_lower
+        }
+        alert = Alert(**alert_data)
+        session.add(alert)
+        session.commit()
+    sign = 'menor' if alert.trigger_on_lower else 'mayor'
     text = "Perfecto, te enviaré una alerta cuando el precio sea _{}_ a *${}*.".format(sign, price)
     update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
