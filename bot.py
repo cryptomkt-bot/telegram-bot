@@ -10,6 +10,7 @@ from models import session, Market
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 DEBUG = os.environ.get('DEBUG')
+WARNING_UNICODE = u'\U000026A0'
 
 # Enable logger
 log_level = logging.DEBUG if DEBUG else logging.INFO
@@ -49,7 +50,8 @@ def update_price(cryptomkt, dispatcher):
 def alert(markets, dispatcher):
     for market in markets:
         for alert in market.valid_alerts():
-            text = "*¡ALERTA!*\n\n_{}_\n*Precio actual = ${}*".format(str(alert), market.price)
+            text = "{} *¡ALERTA!*\n\n".format(WARNING_UNICODE)
+            text += "_{}_\n*Precio actual = ${}*".format(str(alert), market.price)
             dispatcher.bot.send_message(chat_id=alert.chat_id, text=text, parse_mode=telegram.ParseMode.MARKDOWN)
             session.delete(alert)
     session.commit()
