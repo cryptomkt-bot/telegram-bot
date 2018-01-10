@@ -9,9 +9,11 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, Filters, MessageH
 from models import session, Market
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
+DEBUG = os.environ.get('DEBUG')
 
 # Enable logger
-logging.basicConfig(level=logging.INFO,
+log_level = logging.DEBUG if DEBUG else logging.INFO
+logging.basicConfig(level=log_level,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
@@ -67,12 +69,15 @@ def register_handlers(dispatcher):
 
 
 def start_server(updater):
-    updater.start_webhook(listen='0.0.0.0',
-                          port=8443,
-                          url_path=BOT_TOKEN,
-                          key='private.key',
-                          cert='cert.pem',
-                          webhook_url='https://104.236.232.252:8443/' + BOT_TOKEN)
+    if DEBUG:
+        updater.start_polling()
+    else:
+        updater.start_webhook(listen='0.0.0.0',
+                              port=8443,
+                              url_path=BOT_TOKEN,
+                              key='private.key',
+                              cert='cert.pem',
+                              webhook_url='https://104.236.232.252:8443/' + BOT_TOKEN)
 
 
 if __name__ == '__main__':
