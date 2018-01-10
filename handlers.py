@@ -44,7 +44,9 @@ def query_handler(bot, update):
         arg = data_list[1]
     except IndexError:
         pass
-    if command == 'alert_detail':
+    if command == 'price_detail':
+        price_detail(bot, query)
+    elif command == 'alert_detail':
         alert_detail(query, arg)
         query.answer()
     elif command == 'alert_list':
@@ -62,8 +64,19 @@ def price(bot, update):
     market = get_market(bot, update)
     if market is None:
         return
+    keyboard = [[InlineKeyboardButton("Más información", callback_data='price_detail')]]
     text = "*{price}*\n_{time}_".format(price=market.formatted_price(), time=market.time())
-    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
+
+
+def price_detail(bot, update):
+    market = get_market(bot, update)
+    spread = market.ask - market.bid
+    spread_pct = spread / market.ask * 100
+    text = "*Compra:* ${ask}\n*Venta:* ${bid}\n".format(ask=market.ask, bid=market.bid)
+    text += "*Spread:* ${spread} ({pct}%)\n\n".format(spread=spread, pct=round(spread_pct, 2))
+    text += "_{time}_".format(price=market.formatted_price(), time=market.time())
+    update.edit_message_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
 def add_alert(bot, update, price=None):
@@ -84,7 +97,7 @@ def add_alert(bot, update, price=None):
         return update.message.reply_text("El precio debe ser un número mayor a 0.")
     alert = chat.get_alert(price)
     if alert is None:  # Create alert only if it doesn't exist
-        trigger_on_lower = price <= chat.market.price
+        trigger_on_lower = price <= chat.market.ask
         alert_data = {
             'chat_id': chat.id,
             'price': price,

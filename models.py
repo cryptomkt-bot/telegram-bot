@@ -33,7 +33,8 @@ class Chat(Base):
 
 class Market(Base):
     code = Column(String, nullable=False, unique=True)
-    price = Column(Integer)
+    ask = Column(Integer)
+    bid = Column(Integer)
     timestamp = Column(String)
 
     def time(self):
@@ -41,13 +42,13 @@ class Market(Base):
         return time.strftime('%d/%m/%Y - %H:%M:%S (UTC)')
 
     def formatted_price(self):
-        return "${value} ({code})".format(value=self.price, code=self.code[3:])
+        return "${value} ({code})".format(value=self.ask, code=self.code[3:])
 
     def valid_alerts(self):
         """Return those alerts that satisfy its conditions."""
         filters = [
-            and_(Market.price < Alert.price, Alert.trigger_on_lower == True),
-            and_(Market.price > Alert.price, Alert.trigger_on_lower == False),
+            and_(Market.ask < Alert.price, Alert.trigger_on_lower == True),
+            and_(Market.ask > Alert.price, Alert.trigger_on_lower == False),
         ]
         query = session.query(Alert).join(Chat).join(Market).filter(Market.id == self.id).filter(or_(*filters))
         return query.all()

@@ -36,10 +36,11 @@ def update_price(cryptomkt, dispatcher):
             if t['market'] == market.code:
                 ticker = t
                 break
-        price_changed = market.price != ticker['ask']
+        price_changed = market.ask != ticker['ask']
         if price_changed:
             changed_markets.append(market)
-            market.price = ticker['ask']
+            market.ask = ticker['ask']
+        market.bid = ticker['bid']
         market.timestamp = ticker['timestamp']
         session.add(market)
     session.commit()
@@ -51,7 +52,7 @@ def alert(markets, dispatcher):
     for market in markets:
         for alert in market.valid_alerts():
             text = "{} *¡ALERTA!*\n\n".format(WARNING_UNICODE)
-            text += "_{}_\n*Precio actual = ${}*".format(str(alert), market.price)
+            text += "_{}_\n*Precio actual = ${}*".format(str(alert), market.ask)
             dispatcher.bot.send_message(chat_id=alert.chat_id, text=text, parse_mode=telegram.ParseMode.MARKDOWN)
             session.delete(alert)
     session.commit()
