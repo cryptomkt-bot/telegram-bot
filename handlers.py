@@ -54,7 +54,7 @@ def query_handler(bot, update):
         remove_alert(bot, query, arg)
         query.answer("Alerta eliminada")
     elif command == 'market_selected':
-        market_selected(query, int(arg))
+        market_selected(bot, query, int(arg))
         query.answer("Mercado configurado")
 
 
@@ -141,13 +141,17 @@ def market_list(bot, update, text=None):
     update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
-def market_selected(update, market_id):
+def market_selected(bot, update, market_id):
     chat_id = update.message.chat.id
     chat = session.query(Chat).get(chat_id)
-    if chat.market_id != market_id:
+    previous_market_id = chat.market_id
+    if previous_market_id != market_id:
         chat.market_id = market_id
         session.commit()
-        session.query(Alert).filter_by(chat_id=chat.id).delete()  # Delete alerts of previous market
+        if previous_market_id is None:  # Show the help menu if it's a new user
+            help_me(bot, update)
+        else:
+            session.query(Alert).filter_by(chat_id=chat.id).delete()  # Delete alerts of previous market
 
 
 def get_chat(update):
