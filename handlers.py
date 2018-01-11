@@ -1,5 +1,5 @@
 from models import session, Alert, Chat, Market
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
+from telegram import error, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 
 MAX_ALERT_NUMBER = 5
 
@@ -46,6 +46,12 @@ def query_handler(bot, update):
         pass
     if command == 'price_detail':
         price_detail(bot, query)
+    elif command == 'update_price':
+        price(bot, query, edit_message=True)
+        query.answer("Precio actualizado")
+    elif command == 'update_price_detail':
+        price_detail(bot, query)
+        query.answer("Valores actualizados")
     elif command == 'alert_detail':
         alert_detail(query, arg)
         query.answer()
@@ -60,13 +66,18 @@ def query_handler(bot, update):
         query.answer("Mercado configurado")
 
 
-def price(bot, update):
+def price(bot, update, edit_message=False):
+    send = update.edit_message_text if edit_message else update.message.reply_text
     market = get_market(bot, update)
     if market is None:
         return
-    keyboard = [[InlineKeyboardButton("Más información", callback_data='price_detail')]]
+    keyboard = [[InlineKeyboardButton("Actualizar", callback_data='update_price'),
+                 InlineKeyboardButton("Más información", callback_data='price_detail')]]
     text = "*{price}*\n_{time}_".format(price=market.formatted_price(), time=market.time())
-    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
+    try:
+        send(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
+    except error.BadRequest:  # Message is not modified
+        pass
 
 
 def price_detail(bot, update):
@@ -76,7 +87,11 @@ def price_detail(bot, update):
     text = "*Compra:* ${ask}\n*Venta:* ${bid}\n".format(ask=market.ask, bid=market.bid)
     text += "*Spread:* ${spread} ({pct}%)\n\n".format(spread=spread, pct=round(spread_pct, 2))
     text += "_{time}_".format(price=market.formatted_price(), time=market.time())
-    update.edit_message_text(text, parse_mode=ParseMode.MARKDOWN)
+    keyboard = [[InlineKeyboardButton("Actualizar", callback_data='update_price_detail')]]
+    try:
+        update.edit_message_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
+    except error.BadRequest:  # Message is not modified
+        pass
 
 
 def add_alert(bot, update, price=None):

@@ -39,7 +39,7 @@ class Market(Base):
 
     def time(self):
         time = datetime.strptime(self.timestamp, '%Y-%m-%dT%H:%M:%S.%f')
-        return time.strftime('%d/%m/%Y - %H:%M:%S (UTC)')
+        return time.strftime('%d/%m/%Y - %H:%M (UTC)')
 
     def formatted_price(self):
         return "${value} ({code})".format(value=self.ask, code=self.code[3:])
