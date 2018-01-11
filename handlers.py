@@ -81,10 +81,8 @@ def price(bot, update, edit_message=False):
 
 def price_detail(bot, update):
     market = get_market(bot, update)
-    spread = market.ask - market.bid
-    spread_pct = spread / market.ask * 100
     text = "*Compra:* ${ask}\n*Venta:* ${bid}\n".format(ask=market.ask, bid=market.bid)
-    text += "*Spread:* ${spread} ({pct}%)\n".format(spread=spread, pct=round(spread_pct, 2))
+    text += "*Spread:* ${spread} ({pct}%)\n".format(spread=market.spread, pct=market.spread_pct)
     text += "*Más bajo:* ${low}\n*Más alto:* ${high}\n\n".format(low=market.low, high=market.high)
     text += "_{time}_".format(price=market.formatted_price(), time=market.time())
     keyboard = [[InlineKeyboardButton("Actualizar", callback_data='update_price_detail')]]

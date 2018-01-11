@@ -25,6 +25,7 @@ def main():
     update_price(cryptomkt, dispatcher)
     register_handlers(dispatcher)
     start_server(updater)
+    updater.idle()
 
 
 def update_price(cryptomkt, dispatcher):
@@ -36,14 +37,11 @@ def update_price(cryptomkt, dispatcher):
             if t['market'] == market.code:
                 ticker = t
                 break
-        price_changed = market.ask != ticker['ask']
-        if price_changed:
+        if market.ask != ticker['ask']:
             changed_markets.append(market)
-            market.ask = ticker['ask']
-        market.bid = ticker['bid']
-        market.low = ticker['low']
-        market.high = ticker['high']
-        market.timestamp = ticker['timestamp']
+        ticker_data = ('ask', 'bid', 'low', 'high', 'timestamp')
+        for attr in ticker_data:
+            setattr(market, attr, ticker[attr])
         session.add(market)
     session.commit()
     alert(changed_markets, dispatcher)
@@ -85,12 +83,13 @@ def start_server(updater):
     if DEBUG:
         updater.start_polling()
     else:
+        SERVER_URL = os.environ.get('SERVER_URL')
         updater.start_webhook(listen='0.0.0.0',
                               port=8443,
                               url_path=BOT_TOKEN,
                               key='private.key',
                               cert='cert.pem',
-                              webhook_url='https://104.236.232.252:8443/' + BOT_TOKEN)
+                              webhook_url=SERVER_URL + BOT_TOKEN)
 
 
 if __name__ == '__main__':

@@ -39,6 +39,14 @@ class Market(Base):
     high = Column(Integer)
     timestamp = Column(String)
 
+    @property
+    def spread(self):
+        return self.ask - self.bid
+
+    @property
+    def spread_pct(self):
+        return round(self.spread / self.ask * 100, 2)
+
     def time(self):
         time = datetime.strptime(self.timestamp, '%Y-%m-%dT%H:%M:%S.%f')
         return time.strftime('%d/%m/%Y - %H:%M (UTC)')
