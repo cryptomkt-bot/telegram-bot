@@ -41,6 +41,8 @@ def update_price(cryptomkt, dispatcher):
             changed_markets.append(market)
             market.ask = ticker['ask']
         market.bid = ticker['bid']
+        market.low = ticker['low']
+        market.high = ticker['high']
         market.timestamp = ticker['timestamp']
         session.add(market)
     session.commit()

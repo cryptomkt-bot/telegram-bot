@@ -35,6 +35,8 @@ class Market(Base):
     code = Column(String, nullable=False, unique=True)
     ask = Column(Integer)
     bid = Column(Integer)
+    low = Column(Integer)
+    high = Column(Integer)
     timestamp = Column(String)
 
     def time(self):
