@@ -171,8 +171,7 @@ def market_list(bot, update, text=None):
 
 
 def market_selected(bot, update, market_id):
-    chat_id = update.message.chat.id
-    chat = session.query(Chat).get(chat_id)
+    chat = get_chat(update)
     previous_market_id = chat.market_id
     if previous_market_id != market_id:
         chat.market_id = market_id
@@ -185,7 +184,12 @@ def market_selected(bot, update, market_id):
 
 def get_chat(update):
     chat_id = update.message.chat.id
-    return session.query(Chat).get(chat_id)
+    chat = session.query(Chat).get(chat_id)
+    if chat is None:
+        chat = Chat(id=chat_id)
+        session.add(chat)
+        session.commit()
+    return chat
 
 
 def get_market(bot, update, chat=None):
