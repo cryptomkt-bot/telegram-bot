@@ -53,8 +53,7 @@ def query_handler(bot, update):
         price_detail(bot, query)
         query.answer("Valores actualizados")
     elif command == 'alert_detail':
-        alert_detail(query, arg)
-        query.answer()
+        alert_detail(bot, query, arg)
     elif command == 'alert_list':
         alert_list(bot, query, edit_message=True)
         query.answer()
@@ -152,11 +151,15 @@ def alert_list(bot, update, edit_message=False):
     send(text, **text_setting)
 
 
-def alert_detail(query, alert_id):
+def alert_detail(bot, update, alert_id):
     alert = session.query(Alert).get(alert_id)
+    if alert is None:
+        update.answer("La alerta no existe")
+        return alert_list(bot, update, edit_message=True)
     keyboard = [[InlineKeyboardButton("Volver al listado", callback_data='alert_list'),
                  InlineKeyboardButton("Eliminar alerta", callback_data='remove_alert {}'.format(alert.id))]]
-    query.edit_message_text(str(alert), reply_markup=InlineKeyboardMarkup(keyboard))
+    update.edit_message_text(str(alert), reply_markup=InlineKeyboardMarkup(keyboard))
+    update.answer()
 
 
 def market_list(bot, update, text=None):
