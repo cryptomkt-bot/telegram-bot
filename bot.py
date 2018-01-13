@@ -55,7 +55,15 @@ def alert(markets, dispatcher):
         for alert in market.valid_alerts():
             text = "{} *¡ALERTA!*\n\n".format(WARNING_UNICODE)
             text += "_{}_\n*Precio actual = ${}*".format(str(alert), market.ask)
-            dispatcher.bot.send_message(chat_id=alert.chat_id, text=text, parse_mode=telegram.ParseMode.MARKDOWN)
+            message = {
+                'chat_id': alert.chat_id,
+                'text': text,
+                'parse_mode': telegram.ParseMode.MARKDOWN,
+            }
+            try:
+                dispatcher.bot.send_message(**message)
+            except telegram.error.Unauthorized:  # User blocked the bot
+                session.delete(alert.chat)
             session.delete(alert)
     session.commit()
 

@@ -58,7 +58,7 @@ class Market(Base):
 
 class Alert(Base):
     """A user price alert"""
-    chat_id = Column(ForeignKey('chat.id'), nullable=False)
+    chat_id = Column(ForeignKey('chat.id', ondelete='CASCADE'), nullable=False)
     chat = relationship('Chat', backref='alerts')
     price = Column(Integer)
     trigger_on_lower = Column(Boolean, nullable=False)
