@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import create_engine, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import backref, relationship, sessionmaker
 from sqlalchemy.sql.expression import and_, or_
 
 engine = create_engine('sqlite:///bot.db', connect_args={'check_same_thread': False})
@@ -66,8 +66,8 @@ class Market(Base):
 
 class Alert(Base):
     """A user price alert"""
-    chat_id = Column(ForeignKey('chat.id', ondelete='CASCADE'), nullable=False)
-    chat = relationship('Chat', backref='alerts')
+    chat_id = Column(ForeignKey('chat.id'), nullable=False)
+    chat = relationship('Chat', backref=backref('alerts', cascade='all, delete-orphan'))
     price = Column(Integer)
     trigger_on_lower = Column(Boolean, nullable=False)
 
