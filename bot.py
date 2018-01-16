@@ -4,6 +4,7 @@ import telegram
 import threading
 
 from cryptomkt import Cryptomkt
+from requests.exceptions import ConnectionError
 from telegram.ext import CallbackQueryHandler, CommandHandler, Filters, MessageHandler, Updater
 
 from models import session, Market
@@ -30,7 +31,10 @@ def main():
 
 def update_price(cryptomkt, dispatcher):
     markets = session.query(Market).all()
-    tickers = cryptomkt.get_tickers()
+    try:
+        tickers = cryptomkt.get_tickers()
+    except (ConnectionError, cryptomkt.ApiError):
+        return
     changed_markets = []  # Markets with price change
     for market in markets:
         for t in tickers:  # TODO: Avoid nested loop if possible
