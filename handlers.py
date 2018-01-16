@@ -72,7 +72,7 @@ def price(bot, update, edit_message=False):
         return
     keyboard = [[InlineKeyboardButton("Actualizar", callback_data='update_price'),
                  InlineKeyboardButton("Más información", callback_data='price_detail')]]
-    text = "*{price}*\n_{time}_".format(price=market.formatted_price(), time=market.time())
+    text = "*{price}*\n\n_{time}_".format(price=market.formatted_price(), time=market.time())
     try:
         send(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
     except error.BadRequest:  # Message is not modified
@@ -81,10 +81,10 @@ def price(bot, update, edit_message=False):
 
 def price_detail(bot, update):
     market = get_market(bot, update)
-    text = "*Compra:* ${ask}\n*Venta:* ${bid}\n".format(ask=market.ask, bid=market.bid)
-    text += "*Spread:* ${spread} ({pct}%)\n".format(spread=market.spread, pct=market.spread_pct)
-    text += "*Más bajo:* ${low}\n*Más alto:* ${high}\n".format(low=market.low, high=market.high)
-    text += "*Volumen*: {volume} ETH\n".format(volume=market.volume)
+    text = "*COMPRA:* ${ask}\n*VENTA:* ${bid}\n".format(ask=market.ask, bid=market.bid)
+    text += "*SPREAD:* ${spread} ({pct}%)\n".format(spread=market.spread, pct=market.spread_pct)
+    text += "*MÁS BAJO:* ${low}\n*MÁS ALTO:* ${high}\n".format(low=market.low, high=market.high)
+    text += "*VOLUMEN*: {volume} ETH\n".format(volume=market.volume)
     text += "\n_{time}_".format(price=market.formatted_price(), time=market.time())
     keyboard = [[InlineKeyboardButton("Actualizar", callback_data='update_price_detail')]]
     try:

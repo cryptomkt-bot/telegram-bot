@@ -1,9 +1,9 @@
 import logging
 import os
+import requests
 import telegram
 import threading
 
-from cryptomkt import Cryptomkt
 from requests.exceptions import ConnectionError
 from telegram.ext import CallbackQueryHandler, CommandHandler, Filters, MessageHandler, Updater
 
@@ -19,21 +19,28 @@ logging.basicConfig(level=log_level,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
+def get_tickers():
+    endpoint = 'https://api.cryptomkt.com/v1/ticker'
+    try:
+        response = requests.get(endpoint)
+        return response.json()['data']
+    except (ConnectionError, KeyError):
+        return None
+
+
 def main():
-    cryptomkt = Cryptomkt()
     updater = Updater(token=BOT_TOKEN)
     dispatcher = updater.dispatcher
-    update_price(cryptomkt, dispatcher)
+    update_price(dispatcher)
     register_handlers(dispatcher)
     start_server(updater)
     updater.idle()
 
 
-def update_price(cryptomkt, dispatcher):
+def update_price(dispatcher):
     markets = session.query(Market).all()
-    try:
-        tickers = cryptomkt.get_tickers()
-    except (ConnectionError, cryptomkt.ApiError):
+    tickers = get_tickers()
+    if tickers is None:
         return
     changed_markets = []  # Markets with price change
     for market in markets:
@@ -49,7 +56,7 @@ def update_price(cryptomkt, dispatcher):
         session.add(market)
     session.commit()
     alert(changed_markets, dispatcher)
-    threading.Timer(60, update_price, [cryptomkt, dispatcher]).start()  # Execute every 60 seconds.
+    threading.Timer(60, update_price, [dispatcher]).start()  # Execute every 60 seconds.
 
 
 def alert(markets, dispatcher):
