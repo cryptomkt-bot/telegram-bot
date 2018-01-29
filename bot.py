@@ -43,7 +43,7 @@ def update_price(cryptomkt, dispatcher):
                 break
         if market.ask != ticker['ask']:
             changed_markets.append(market)
-        ticker_data = ('ask', 'bid', 'low', 'high', 'timestamp')
+        ticker_data = ('ask', 'bid', 'low', 'high', 'volume', 'timestamp')
         for attr in ticker_data:
             setattr(market, attr, ticker[attr])
         session.add(market)

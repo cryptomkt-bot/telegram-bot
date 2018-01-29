@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import create_engine, Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import create_engine, Boolean, Column, ForeignKey, Integer, Numeric, String
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import backref, relationship, sessionmaker
 from sqlalchemy.sql.expression import and_, or_
@@ -37,6 +37,7 @@ class Market(Base):
     bid = Column(Integer)
     low = Column(Integer)
     high = Column(Integer)
+    volume = Column(Numeric(scale=2))
     timestamp = Column(String)
 
     @property
