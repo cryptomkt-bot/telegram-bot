@@ -44,25 +44,29 @@ def query_handler(bot, update):
         arg = data_list[1]
     except IndexError:
         pass
+    answer = ""
     if command == 'price_detail':
         price_detail(bot, query)
     elif command == 'update_price':
         price(bot, query, edit_message=True)
-        query.answer("Precio actualizado")
+        answer = "Precio actualizado"
     elif command == 'update_price_detail':
         price_detail(bot, query)
-        query.answer("Valores actualizados")
+        answer = "Valores actualizados"
     elif command == 'alert_detail':
         alert_detail(bot, query, arg)
     elif command == 'alert_list':
         alert_list(bot, query, edit_message=True)
-        query.answer()
     elif command == 'remove_alert':
         remove_alert(bot, query, arg)
-        query.answer("Alerta eliminada")
+        answer = "Alerta eliminada"
     elif command == 'market_selected':
         market_selected(bot, query, int(arg))
-        query.answer("Mercado configurado")
+        answer = "Mercado configurado"
+    try:
+        query.answer(answer)
+    except error.BadRequest:
+        pass
 
 
 def price(bot, update, edit_message=False):
