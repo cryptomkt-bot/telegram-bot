@@ -4,6 +4,7 @@ import requests
 import telegram
 import threading
 
+from json.decoder import JSONDecodeError
 from requests.exceptions import ConnectionError
 from telegram.ext import CallbackQueryHandler, CommandHandler, Filters, MessageHandler, Updater
 
@@ -24,7 +25,7 @@ def get_tickers():
     try:
         response = requests.get(endpoint)
         return response.json()['data']
-    except (ConnectionError, KeyError):
+    except (ConnectionError, KeyError, JSONDecodeError):
         return None
 
 
