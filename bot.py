@@ -11,11 +11,11 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, Filters, MessageH
 from models import session, Market
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
-DEBUG = os.environ.get('DEBUG')
+DEV = os.environ.get('DEV') == '1'
 WARNING_UNICODE = u'\U000026A0'
 
 # Enable logger
-log_level = logging.DEBUG if DEBUG else logging.INFO
+log_level = logging.DEBUG if DEV else logging.INFO
 logging.basicConfig(level=log_level,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -92,7 +92,7 @@ def register_handlers(dispatcher):
 
 
 def start_server(updater):
-    if DEBUG:
+    if DEV:
         updater.start_polling()
     else:
         SERVER_URL = os.environ.get('SERVER_URL')
