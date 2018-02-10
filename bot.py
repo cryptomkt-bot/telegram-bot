@@ -4,8 +4,6 @@ import requests
 import telegram
 import threading
 
-from json.decoder import JSONDecodeError
-from requests.exceptions import ConnectionError
 from telegram.ext import CallbackQueryHandler, CommandHandler, Filters, MessageHandler, Updater
 
 from models import session, Market
@@ -20,15 +18,6 @@ logging.basicConfig(level=log_level,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
-def get_tickers():
-    endpoint = 'https://api.cryptomkt.com/v1/ticker'
-    try:
-        response = requests.get(endpoint)
-        return response.json()['data']
-    except (ConnectionError, KeyError, JSONDecodeError):
-        return None
-
-
 def main():
     updater = Updater(token=BOT_TOKEN)
     dispatcher = updater.dispatcher
@@ -40,15 +29,11 @@ def main():
 
 def update_price(dispatcher):
     markets = session.query(Market).all()
-    tickers = get_tickers()
-    if tickers is None:
-        return
     changed_markets = []  # Markets with price change
     for market in markets:
-        for t in tickers:  # TODO: Avoid nested loop if possible
-            if t['market'] == market.code:
-                ticker = t
-                break
+        ticker = get_ticker(market.code)
+        if ticker is None:
+            continue
         if market.ask != ticker['ask']:
             changed_markets.append(market)
         ticker_data = ('ask', 'bid', 'low', 'high', 'volume', 'timestamp')
@@ -74,8 +59,18 @@ def alert(markets, dispatcher):
                 dispatcher.bot.send_message(**message)
             except telegram.error.Unauthorized:  # User blocked the bot
                 session.delete(alert.chat)
-            session.delete(alert)
+            else:
+                session.delete(alert)
     session.commit()
+
+
+def get_ticker(market_code):
+    endpoint = 'https://api.cryptomkt.com/v1/ticker'
+    try:
+        response = requests.get(endpoint, params={'market': market_code})
+        return response.json()['data'][0]
+    except:
+        return None
 
 
 def register_handlers(dispatcher):
