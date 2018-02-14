@@ -70,7 +70,7 @@ def query_handler(bot, update):
 
 
 def price(bot, update, edit_message=False):
-    send = update.edit_message_text if edit_message else update.message.reply_text
+    send = update.message.edit_text if edit_message else update.message.reply_text
     market = get_market(bot, update)
     if market is None:
         return
@@ -92,7 +92,7 @@ def price_detail(bot, update):
     text += "\n_{time}_".format(price=market.formatted_price(), time=market.time())
     keyboard = [[InlineKeyboardButton("Actualizar", callback_data='update_price_detail')]]
     try:
-        update.edit_message_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
+        update.message.edit_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
     except error.BadRequest:  # Message is not modified
         pass
 
@@ -135,7 +135,7 @@ def remove_alert(bot, update, alert_id):
 
 
 def alert_list(bot, update, edit_message=False):
-    send = update.edit_message_text if edit_message else update.message.reply_text
+    send = update.message.edit_text if edit_message else update.message.reply_text
     chat_id = update.message.chat.id
     alerts = session.query(Alert).filter_by(chat_id=chat_id).order_by(Alert.price)
     if alerts.count() == 0:
@@ -161,7 +161,7 @@ def alert_detail(bot, update, alert_id):
         return alert_list(bot, update, edit_message=True)
     keyboard = [[InlineKeyboardButton("Volver al listado", callback_data='alert_list'),
                  InlineKeyboardButton("Eliminar alerta", callback_data='remove_alert {}'.format(alert.id))]]
-    update.edit_message_text(str(alert), reply_markup=InlineKeyboardMarkup(keyboard))
+    update.message.edit_text(str(alert), reply_markup=InlineKeyboardMarkup(keyboard))
     update.answer()
 
 
