@@ -49,7 +49,7 @@ def alert(markets, dispatcher):
     for market in markets:
         for alert in market.valid_alerts():
             text = "{} *¡ALERTA!*\n\n".format(WARNING_UNICODE)
-            text += "_{}_\n*Precio actual = ${}*".format(str(alert), market.ask)
+            text += "*{}*\n_Valor actual = {} {}_".format(alert, market.ask, market.currency)
             message = {
                 'chat_id': alert.chat_id,
                 'text': text,
@@ -72,7 +72,6 @@ def get_ticker(market_code):
     except:
         return None
 
-
 def register_handlers(dispatcher):
     import handlers
 
@@ -81,7 +80,6 @@ def register_handlers(dispatcher):
     dispatcher.add_handler(CommandHandler("precio", handlers.price))
     dispatcher.add_handler(CommandHandler("alerta", handlers.add_alert))
     dispatcher.add_handler(CommandHandler("alertas", handlers.alert_list))
-    dispatcher.add_handler(CommandHandler("mercado", handlers.market_list))
     dispatcher.add_handler(CallbackQueryHandler(handlers.query_handler))
     dispatcher.add_handler(MessageHandler(Filters.text, handlers.text_handler))
 
