@@ -42,7 +42,7 @@ def update_price(dispatcher):
         session.add(market)
     session.commit()
     alert(changed_markets, dispatcher)
-    threading.Timer(30, update_price, [dispatcher]).start()  # Execute every 30 seconds.
+    threading.Timer(60, update_price, [dispatcher]).start()  # Execute every 60 seconds.
 
 
 def alert(markets, dispatcher):
