@@ -30,18 +30,18 @@ def main():
 def update_price(dispatcher):
     markets = session.query(Market).all()
     changed_markets = []  # Markets with price change
-    for market in markets:
-        ticker = get_ticker(market.code)
-        if ticker is None:
-            continue
-        if market.ask != ticker['ask']:
-            changed_markets.append(market)
-        ticker_data = ('ask', 'bid', 'low', 'high', 'volume', 'timestamp')
-        for attr in ticker_data:
-            setattr(market, attr, ticker[attr])
-        session.add(market)
-    session.commit()
-    alert(changed_markets, dispatcher)
+    tickers = get_tickers()
+    if tickers is not None:
+        for market in markets:
+            ticker = tickers[market.code]
+            if market.ask != ticker['ask']:
+                changed_markets.append(market)
+            ticker_data = ('ask', 'bid', 'low', 'high', 'volume', 'timestamp')
+            for attr in ticker_data:
+                setattr(market, attr, ticker[attr])
+            session.add(market)
+        session.commit()
+        alert(changed_markets, dispatcher)
     threading.Timer(60, update_price, [dispatcher]).start()  # Execute every 60 seconds.
 
 
@@ -64,13 +64,18 @@ def alert(markets, dispatcher):
     session.commit()
 
 
-def get_ticker(market_code):
+def get_tickers():
     endpoint = 'https://api.cryptomkt.com/v1/ticker'
     try:
-        response = requests.get(endpoint, params={'market': market_code})
-        return response.json()['data'][0]
+        response = requests.get(endpoint)
+        tickers = response.json()['data']
     except:
         return None
+    tickers_indexed = {}
+    for ticker in tickers:
+        tickers_indexed[ticker['market']] = ticker
+    return tickers_indexed
+
 
 def register_handlers(dispatcher):
     import handlers
