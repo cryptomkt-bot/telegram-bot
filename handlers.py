@@ -163,7 +163,7 @@ def add_alert(bot, update, market_id=None, price=None):
         'currency': market.currency,
     }
     text = "Perfecto, te enviaré una alerta si\n*1 {coin} {sign} {price} {currency}*".format(**values)
-    keyboard = [[InlineKeyboardButton("Añadir otra alerta", callback_data='add_alert'.format(market.id)),
+    keyboard = [[InlineKeyboardButton("Añadir otra alerta", callback_data='add_alert {}'.format(market.id)),
                  InlineKeyboardButton("Ver alertas", callback_data='alert_list')]]
     update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
 
