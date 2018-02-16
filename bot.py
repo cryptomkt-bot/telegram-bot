@@ -10,6 +10,8 @@ from models import session, Market
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 DEV = os.environ.get('DEV') == '1'
+ADMIN_CHAT_ID = int(os.environ.get('ADMIN_CHAT_ID'))
+admin_filter = Filters.chat(ADMIN_CHAT_ID)
 WARNING_UNICODE = u'\U000026A0'
 
 # Enable logger
@@ -85,6 +87,7 @@ def register_handlers(dispatcher):
     dispatcher.add_handler(CommandHandler("precio", handlers.price))
     dispatcher.add_handler(CommandHandler("alerta", handlers.add_alert))
     dispatcher.add_handler(CommandHandler("alertas", handlers.alert_list))
+    dispatcher.add_handler(CommandHandler("broadcast", handlers.broadcast, filters=admin_filter, pass_args=True))
     dispatcher.add_handler(CallbackQueryHandler(handlers.query_handler))
     dispatcher.add_handler(MessageHandler(Filters.text, handlers.text_handler))
 

@@ -196,6 +196,17 @@ def alert_detail(bot, update, alert_id):
     update.answer()
 
 
+def broadcast(bot, update, args):
+    text = " ".join(args).replace("\\n", "\n")
+    chats = session.query(Chat).all()
+    for chat in chats:
+        try:
+            bot.send_message(chat_id=chat.id, text=text, parse_mode=ParseMode.MARKDOWN)
+        except error.Unauthorized:  # User blocked the bot
+            session.delete(chat)
+    session.commit()
+
+
 def get_chat(update):
     chat_id = update.message.chat.id
     chat = session.query(Chat).get(chat_id)
