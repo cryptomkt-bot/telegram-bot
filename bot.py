@@ -1,9 +1,9 @@
 import logging
 import os
 import requests
-import telegram
 import threading
 
+from telegram import error, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 from telegram.ext import CallbackQueryHandler, CommandHandler, Filters, MessageHandler, Updater
 
 from models import session, Market
@@ -52,14 +52,17 @@ def alert(markets, dispatcher):
         for alert in market.valid_alerts():
             text = "{} *¡ALERTA!*\n\n".format(WARNING_UNICODE)
             text += "*{}*\n_Valor actual = {} {}_".format(alert, market.ask, market.currency)
+            callback_data = 'add_alert {}'.format(market.id)
+            keyboard = [[InlineKeyboardButton("Añadir otra alerta", callback_data=callback_data)]]
             message = {
                 'chat_id': alert.chat_id,
                 'text': text,
-                'parse_mode': telegram.ParseMode.MARKDOWN,
+                'parse_mode': ParseMode.MARKDOWN,
+                'reply_markup': InlineKeyboardMarkup(keyboard),
             }
             try:
                 dispatcher.bot.send_message(**message)
-            except telegram.error.Unauthorized:  # User blocked the bot
+            except error.Unauthorized:  # User blocked the bot
                 session.delete(alert.chat)
             else:
                 session.delete(alert)

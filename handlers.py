@@ -86,7 +86,8 @@ def price(bot, update, market_id=None, edit_message=False):
     market = session.query(Market).get(market_id)
     send = update.message.edit_text if edit_message else update.message.reply_text
     keyboard = [[InlineKeyboardButton("Actualizar", callback_data='update_price {}'.format(market_id)),
-                 InlineKeyboardButton("Más información", callback_data='price_detail {}'.format(market_id))]]
+                 InlineKeyboardButton("Añadir alerta", callback_data='add_alert {}'.format(market_id))],
+                [InlineKeyboardButton("Más información", callback_data='price_detail {}'.format(market_id))]]
     text = "*1 {coin} = {ask} {currency}*".format(coin=market.coin, ask=market.ask, currency=market.currency)
     text += "\n\n_{time}_".format(time=market.time)
     try:
@@ -113,7 +114,8 @@ def price_detail(bot, update, market_id):
     }
     values.update(market.__dict__)
     text = text.format(**values)
-    keyboard = [[InlineKeyboardButton("Actualizar", callback_data='price_detail {}'.format(market_id))]]
+    keyboard = [[InlineKeyboardButton("Actualizar", callback_data='price_detail {}'.format(market_id)),
+                 InlineKeyboardButton("Añadir alerta", callback_data='add_alert {}'.format(market_id))]]
     try:
         update.message.edit_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
     except error.BadRequest:  # Message is not modified
@@ -161,7 +163,9 @@ def add_alert(bot, update, market_id=None, price=None):
         'currency': market.currency,
     }
     text = "Perfecto, te enviaré una alerta si\n*1 {coin} {sign} {price} {currency}*".format(**values)
-    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+    keyboard = [[InlineKeyboardButton("Añadir otra alerta", callback_data='add_alert'.format(market.id)),
+                 InlineKeyboardButton("Ver alertas", callback_data='alert_list')]]
+    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
 def remove_alert(bot, update, alert_id):
