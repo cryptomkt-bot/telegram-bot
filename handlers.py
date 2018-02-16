@@ -129,13 +129,15 @@ def add_alert(bot, update, market_id=None, price=None):
     if chat.market_id != market_id:
         chat.market_id = market_id
         session.commit()
+    market = chat.market
     if price is None:
-        market = chat.market
         text = "_Precio actual = {} {}_".format(market.ask, market.currency)
         update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
         return update.message.reply_text(ALERT_INPUT_TEXT, reply_markup=ForceReply())
     try:
-        price = str_to_num(price)
+        price = round(float(price), market.decimals)
+        if price % 1 == 0:
+            price = int(price)
         if price <= 0:
             raise ValueError
     except ValueError:
@@ -219,10 +221,3 @@ def get_chat(update):
         session.add(chat)
         session.commit()
     return chat
-
-
-def str_to_num(value):
-    value = float(value)
-    if value % 1 == 0:
-        return int(value)
-    return round(value, 2)

@@ -43,6 +43,7 @@ class Market(Base):
     high = Column(String)
     volume = Column(String)
     timestamp = Column(String)
+    decimals = Column(Integer)
 
     def __repr__(self):
         return '<Market({})>'.format(self.code)
