@@ -111,6 +111,7 @@ def price_detail(bot, update, market_id):
         'spread': market.spread,
         'spread_pct': market.spread_pct,
         'time': market.time,
+        'volume': market.volume,
     }
     values.update(market.__dict__)
     text = text.format(**values)

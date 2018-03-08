@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy import create_engine, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship, sessionmaker
 from sqlalchemy.sql.expression import and_, or_
 
@@ -41,12 +42,20 @@ class Market(Base):
     bid = Column(String)
     low = Column(String)
     high = Column(String)
-    volume = Column(String)
+    _volume = Column('volume', String)
     timestamp = Column(String)
     decimals = Column(Integer)
 
     def __repr__(self):
         return '<Market({})>'.format(self.code)
+
+    @hybrid_property
+    def volume(self):
+        return round(float(self._volume), 2)
+
+    @volume.setter
+    def volume(self, value):
+        self._volume = value
 
     @property
     def code(self):
