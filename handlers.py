@@ -71,10 +71,10 @@ def query_handler(bot, update):
 def market_list(update, method):
     markets = session.query(Market).order_by(Market.currency)
     keyboard, row = [], []
-    for i, market in enumerate(markets):
+    for i, market in enumerate(markets, start=1):
         data = '{method} {market_id}'.format(method=method, market_id=market.id)
         row.append(InlineKeyboardButton(market.code, callback_data=data))
-        if i % 2 == 1:
+        if i % 3 == 0:
             keyboard.append(row)
             row = []
     update.message.reply_text(text="Seleccione un mercado", reply_markup=InlineKeyboardMarkup(keyboard))
