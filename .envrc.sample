@@ -1,0 +1,3 @@
+export BOT_TOKEN=0123456789
+export SERVER_URL=https://foobar.com/
+export ADMIN_CHAT_ID=1337
