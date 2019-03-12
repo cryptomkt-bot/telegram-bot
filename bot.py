@@ -100,12 +100,14 @@ def start_server(updater):
         updater.start_polling()
     else:
         SERVER_URL = os.environ.get('SERVER_URL')
+        SERVER_PORT = os.environ.get('SERVER_PORT')
+        webhook_url = '{url}:{port}/{token}'.format(url=SERVER_URL, port=SERVER_PORT, token=BOT_TOKEN)
         updater.start_webhook(listen='0.0.0.0',
-                              port=8443,
+                              port=int(SERVER_PORT),
                               url_path=BOT_TOKEN,
                               key='private.key',
                               cert='cert.pem',
-                              webhook_url=SERVER_URL + BOT_TOKEN)
+                              webhook_url=webhook_url)
 
 
 if __name__ == '__main__':

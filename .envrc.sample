@@ -1,3 +1,4 @@
 export BOT_TOKEN=0123456789
-export SERVER_URL=https://foobar.com/
+export SERVER_URL=https://foobar.com
+export SERVER_PORT=8443
 export ADMIN_CHAT_ID=1337
