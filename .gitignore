@@ -4,3 +4,4 @@ bot.db
 cert.pem
 private.key
 .envrc
+.env
